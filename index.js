@@ -9,6 +9,45 @@ const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 app.use(cors());
 app.use(express.json());
 
+// const verifyJWT = (req, res, next) => {
+// 	const authorization = req.headers.authorization;
+// 	if (!authorization) {
+// 		return res
+// 			.status(401)
+// 			.send({ err: true, message: 'unauthorized access' });
+// 	}
+// 	// bearer token
+// 	const token = authorization.split(' ')[1];
+
+// 	jwt.verify(token, process.env.SECRET_TOKEN_PASS, (err, decoded) => {
+// 		if (err) {
+// 			return res
+// 				.status(401)
+// 				.send({ err: true, message: 'unauthorized access' });
+// 		}
+// 		req.decoded = decoded;
+// 		next();
+// 	});
+// };
+
+const verifyJWT = (req, res, next) => {
+	const token = req.headers.authorization;
+
+	// Check if the token is provided in the request headers
+	if (!token) {
+		return res.status(401).json({ error: 'Unauthorized' });
+	}
+
+	try {
+		// Verify and decode the JWT token
+		const decoded = jwt.verify(token, process.env.SECRET_TOKEN_PASS);
+		req.decoded = decoded; // Set the decoded token to req.decoded
+		next();
+	} catch (error) {
+		return res.status(401).json({ error: 'Invalid token' });
+	}
+};
+
 // musicalMagic
 // tcuusrYMZux9Wib4
 
@@ -37,12 +76,59 @@ async function run() {
 		app.post('/jwt', async (req, res) => {
 			const user = req.body;
 			const token = jwt.sign(user, process.env.SECRET_TOKEN_PASS, {
-				expiresIn: '2 days',
+				expiresIn: '7d',
 			});
 			res.send({ token });
 		});
 
-		// role changes apis
+		// role changes api
+		app.get('/users/role/:email', async (req, res) => {
+			const email = req.params.email;
+
+			try {
+				const user = await userCollection.findOne({ email: email });
+
+				if (!user) {
+					return res.status(404).json({ error: 'User not found' });
+				}
+
+				const roles = user.roles || [];
+
+				const result = {
+					isAdmin: roles.includes('admin'),
+					isInstructor: roles.includes('instructor'),
+					isUser: roles.includes('user'),
+				};
+
+				res.send(result);
+			} catch (error) {
+				console.error('Error retrieving user roles:', error);
+				res.status(500).json({ error: 'Internal server error' });
+			}
+		});
+
+		// app.get('/users/role/:email', verifyJWT, async (req, res) => {
+		// 	const email = req.params.email;
+		// 	console.log(email);
+
+		// 	// 	security layer: verifyJWT
+		// 	// 	email same
+		// 	// 	check admin
+		// 	if (req.decoded.email !== email) {
+		// 		res.send({ admin: false });
+		// 	}
+
+		// 	const query = { email: email };
+		// 	console.log(query);
+		// 	const user = await userCollection.findOne(query);
+		// 	const result = {
+		// 		admin: user?.role === 'admin',
+		// 		instructor: user?.role === 'instructor',
+		// 		user: user?.role === 'user',
+		// 	};
+		// 	res.send(result);
+		// });
+
 		app.patch('/users/role/:id', async (req, res) => {
 			const id = req.params.id;
 			const { role } = req.body;
