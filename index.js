@@ -3,7 +3,7 @@ const app = express();
 const port = process.env.PORT || 5000;
 const cors = require('cors');
 require('dotenv').config();
-var jwt = require('jsonwebtoken');
+const jwt = require('jsonwebtoken');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
 app.use(cors());
@@ -69,11 +69,12 @@ async function run() {
 		// Send a ping to confirm a successful connection
 
 		const userCollection = client.db('musicalMagic').collection('users');
+		const classCollection = client.db('musicalMagic').collection('class');
 		const addClassesCollection = client
 			.db('musicalMagic')
 			.collection('addedClasses');
 
-		app.post('/jwt', async (req, res) => {
+		app.post('/jwt', (req, res) => {
 			const user = req.body;
 			const token = jwt.sign(user, process.env.SECRET_TOKEN_PASS, {
 				expiresIn: '7d',
@@ -82,51 +83,29 @@ async function run() {
 		});
 
 		// role changes api
-		app.get('/users/role/:email', async (req, res) => {
-			const email = req.params.email;
-
-			try {
-				const user = await userCollection.findOne({ email: email });
-
-				if (!user) {
-					return res.status(404).json({ error: 'User not found' });
-				}
-
-				const roles = user.roles || [];
-
-				const result = {
-					isAdmin: roles.includes('admin'),
-					isInstructor: roles.includes('instructor'),
-					isUser: roles.includes('user'),
-				};
-
-				res.send(result);
-			} catch (error) {
-				console.error('Error retrieving user roles:', error);
-				res.status(500).json({ error: 'Internal server error' });
-			}
-		});
-
-		// app.get('/users/role/:email', verifyJWT, async (req, res) => {
+		// app.get('/users/role/:email', async (req, res) => {
 		// 	const email = req.params.email;
-		// 	console.log(email);
 
-		// 	// 	security layer: verifyJWT
-		// 	// 	email same
-		// 	// 	check admin
-		// 	if (req.decoded.email !== email) {
-		// 		res.send({ admin: false });
+		// 	try {
+		// 		const user = await userCollection.findOne({ email: email });
+
+		// 		if (!user) {
+		// 			return res.status(404).json({ error: 'User not found' });
+		// 		}
+
+		// 		const roles = user.roles || [];
+
+		// 		const result = {
+		// 			isAdmin: roles.includes('admin'),
+		// 			isInstructor: roles.includes('instructor'),
+		// 			isUser: roles.includes('user'),
+		// 		};
+
+		// 		res.send(result);
+		// 	} catch (error) {
+		// 		console.error('Error retrieving user roles:', error);
+		// 		res.status(500).json({ error: 'Internal server error' });
 		// 	}
-
-		// 	const query = { email: email };
-		// 	console.log(query);
-		// 	const user = await userCollection.findOne(query);
-		// 	const result = {
-		// 		admin: user?.role === 'admin',
-		// 		instructor: user?.role === 'instructor',
-		// 		user: user?.role === 'user',
-		// 	};
-		// 	res.send(result);
 		// });
 
 		app.patch('/users/role/:id', async (req, res) => {
@@ -159,11 +138,23 @@ async function run() {
 			res.send(result);
 		});
 
+		// Admin related api
+
+		// selected classes by students
+		app.post('/class/:id', async (req, res) => {
+			// const query = req.body;
+			const id = req.params.id;
+			const query = { _id: new ObjectId(id) };
+			const result = await classCollection.insertOne(query);
+			res.send(result);
+		});
+
 		// Added class api by Instructor
 		app.get('/addedClasses', async (req, res) => {
 			const result = await addClassesCollection.find().toArray();
 			res.send(result);
 		});
+
 		app.post('/addedClasses', async (req, res) => {
 			const query = req.body;
 			const result = await addClassesCollection.insertOne(query);
