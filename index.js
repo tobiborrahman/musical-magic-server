@@ -3,6 +3,7 @@ const app = express();
 const port = process.env.PORT || 5000;
 const cors = require('cors');
 require('dotenv').config();
+const stripe = require('stripe')(process.env.PAYMENT_SECRET_KEY);
 const jwt = require('jsonwebtoken');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
@@ -141,17 +142,19 @@ async function run() {
 		// Admin related api
 
 		// selected classes by students
-		app.post('/class', async (req, res) => {
-			const query = req.body;
-			// const id = req.params.id;
-			// const query = { _id: new ObjectId(id) };
-			const result = await classCollection.insertOne(query);
+		app.get('/class', verifyJWT, async (req, res) => {
+			const email = req.params.email;
+			if (!email) {
+				res.send([]);
+			}
+
+			const result = await classCollection.find().toArray();
 			res.send(result);
 		});
 
-		app.get('/class', async (req, res) => {
-			// const filter = req.body;
-			const result = await classCollection.find().toArray();
+		app.post('/class', async (req, res) => {
+			const query = req.body;
+			const result = await classCollection.insertOne(query);
 			res.send(result);
 		});
 
@@ -165,6 +168,21 @@ async function run() {
 			const query = req.body;
 			const result = await addClassesCollection.insertOne(query);
 			res.send(result);
+		});
+
+		// Payment method api
+		app.post('/payment-intent-method', async (req, res) => {
+			const { price } = req.body;
+			const amount = price * 100;
+			const paymentIntent = await stripe.paymentIntents.create({
+				amount: amount,
+				currency: 'usd',
+				payment_method_types: ['card'],
+			});
+
+			res.send({
+				clientSecret: paymentIntent.client_secret,
+			});
 		});
 
 		await client.db('admin').command({ ping: 1 });
