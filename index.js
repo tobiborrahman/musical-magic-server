@@ -141,11 +141,17 @@ async function run() {
 		// Admin related api
 
 		// selected classes by students
-		app.post('/class/:id', async (req, res) => {
-			// const query = req.body;
-			const id = req.params.id;
-			const query = { _id: new ObjectId(id) };
+		app.post('/class', async (req, res) => {
+			const query = req.body;
+			// const id = req.params.id;
+			// const query = { _id: new ObjectId(id) };
 			const result = await classCollection.insertOne(query);
+			res.send(result);
+		});
+
+		app.get('/class', async (req, res) => {
+			// const filter = req.body;
+			const result = await classCollection.find().toArray();
 			res.send(result);
 		});
 
