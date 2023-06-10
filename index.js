@@ -1,10 +1,11 @@
 const express = require('express');
 const app = express();
-const port = process.env.PORT || 5000;
+
 const cors = require('cors');
 require('dotenv').config();
 const stripe = require('stripe')(process.env.PAYMENT_SECRET_KEY);
 const jwt = require('jsonwebtoken');
+const port = process.env.PORT || 5000;
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
 app.use(cors());
@@ -32,12 +33,22 @@ app.use(express.json());
 // };
 
 const verifyJWT = (req, res, next) => {
-	const token = req.headers.authorization;
+	const authorization = req.headers.authorization;
 
 	// Check if the token is provided in the request headers
-	if (!token) {
-		return res.status(401).json({ error: 'Unauthorized' });
+	if (!authorization) {
+		return res.status(401).send({ error: 'Unauthorized' });
 	}
+
+	// const token = authorization.split(' ')[1];
+
+	// jwt.verify(token, process.env.SECRET_TOKEN_PASS, (err, decoded) => {
+	// 	if (err) {
+	// 		return res.status(401).send({ error: 'Unauthorized' });
+	// 	}
+	// 	decoded = req.decoded;
+	// 	next();
+	// });
 
 	try {
 		// Verify and decode the JWT token
@@ -142,12 +153,30 @@ async function run() {
 		// Admin related api
 
 		// selected classes by students
-		app.get('/class', verifyJWT, async (req, res) => {
-			const email = req.params.email;
-			if (!email) {
-				res.send([]);
-			}
+		// app.get('/class/:email', verifyJWT, async (req, res) => {
+		// 	const email = req.query.email;
+		// 	if (!email) {
+		// 		return res.send([]);
+		// 	}
 
+		// 	const decodedEmail = req.decoded.email;
+
+		// 	console.log(decodedEmail);
+
+		// 	if (email !== decodedEmail) {
+		// 		return res.status(403).send({
+		// 			error: true,
+		// 			message: 'forbidden access',
+		// 		});
+		// 	}
+
+		// 	const query = { email: email };
+
+		// 	const result = await classCollection.find(query).toArray();
+		// 	res.send(result);
+		// });
+
+		app.get('/class', async (req, res) => {
 			const result = await classCollection.find().toArray();
 			res.send(result);
 		});
