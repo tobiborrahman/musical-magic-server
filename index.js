@@ -11,49 +11,16 @@ const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 app.use(cors());
 app.use(express.json());
 
-// const verifyJWT = (req, res, next) => {
-// 	const authorization = req.headers.authorization;
-// 	if (!authorization) {
-// 		return res
-// 			.status(401)
-// 			.send({ err: true, message: 'unauthorized access' });
-// 	}
-// 	// bearer token
-// 	const token = authorization.split(' ')[1];
-
-// 	jwt.verify(token, process.env.SECRET_TOKEN_PASS, (err, decoded) => {
-// 		if (err) {
-// 			return res
-// 				.status(401)
-// 				.send({ err: true, message: 'unauthorized access' });
-// 		}
-// 		req.decoded = decoded;
-// 		next();
-// 	});
-// };
-
 const verifyJWT = (req, res, next) => {
 	const authorization = req.headers.authorization;
 
-	// Check if the token is provided in the request headers
 	if (!authorization) {
 		return res.status(401).send({ error: 'Unauthorized' });
 	}
 
-	// const token = authorization.split(' ')[1];
-
-	// jwt.verify(token, process.env.SECRET_TOKEN_PASS, (err, decoded) => {
-	// 	if (err) {
-	// 		return res.status(401).send({ error: 'Unauthorized' });
-	// 	}
-	// 	decoded = req.decoded;
-	// 	next();
-	// });
-
 	try {
-		// Verify and decode the JWT token
 		const decoded = jwt.verify(token, process.env.SECRET_TOKEN_PASS);
-		req.decoded = decoded; // Set the decoded token to req.decoded
+		req.decoded = decoded;
 		next();
 	} catch (error) {
 		return res.status(401).json({ error: 'Invalid token' });
@@ -82,6 +49,9 @@ async function run() {
 
 		const userCollection = client.db('musicalMagic').collection('users');
 		const classCollection = client.db('musicalMagic').collection('class');
+		const paymentCollection = client
+			.db('musicalMagic')
+			.collection('payments');
 		const addClassesCollection = client
 			.db('musicalMagic')
 			.collection('addedClasses');
@@ -212,6 +182,13 @@ async function run() {
 			res.send({
 				clientSecret: paymentIntent.client_secret,
 			});
+		});
+
+		// paid class collection
+		app.post('/payments', async (req, res) => {
+			const items = req.body;
+			const result = await paymentCollection.insertOne(items);
+			res.send(result);
 		});
 
 		await client.db('admin').command({ ping: 1 });
