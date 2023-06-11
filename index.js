@@ -71,6 +71,9 @@ async function run() {
 
 		const userCollection = client.db('musicalMagic').collection('users');
 		const classCollection = client.db('musicalMagic').collection('class');
+		const approvedClassCollection = client
+			.db('musicalMagic')
+			.collection('approvedClass');
 		const instructorCollection = client
 			.db('musicalMagic')
 			.collection('instructors');
@@ -185,6 +188,18 @@ async function run() {
 		app.post('/addedClasses', async (req, res) => {
 			const query = req.body;
 			const result = await addClassesCollection.insertOne(query);
+			res.send(result);
+		});
+
+		// Approved classes
+		app.get('/approvedClasses', async (req, res) => {
+			const result = await approvedClassCollection.find().toArray();
+			res.send(result);
+		});
+
+		app.post('/approvedClasses', async (req, res) => {
+			const query = req.body;
+			const result = await approvedClassCollection.insertOne(query);
 			res.send(result);
 		});
 
