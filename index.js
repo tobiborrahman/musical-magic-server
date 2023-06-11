@@ -37,8 +37,9 @@ const verifyJWT = (req, res, next) => {
 	// bearer token
 	const token = authorization.split(' ')[1];
 
-	jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+	jwt.verify(token, process.env.SECRET_TOKEN_PASS, (err, decoded) => {
 		if (err) {
+			console.log(err);
 			return res
 				.status(401)
 				.send({ error: true, message: 'unauthorized access' });
@@ -159,6 +160,13 @@ async function run() {
 
 		app.get('/class', async (req, res) => {
 			const result = await classCollection.find().toArray();
+			res.send(result);
+		});
+
+		app.get('/class/:email', async (req, res) => {
+			const email = req.params.email;
+			const query = { email: email };
+			const result = await classCollection.find(query).toArray();
 			res.send(result);
 		});
 
