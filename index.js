@@ -179,6 +179,13 @@ async function run() {
 			res.send(result);
 		});
 
+		app.delete('/class/:id', async (req, res) => {
+			const id = req.params.id;
+			const query = { _id: new ObjectId(id) };
+			const result = await classCollection.deleteOne(query);
+			res.send(result);
+		});
+
 		// Added class api by Instructor
 		app.get('/addedClasses', async (req, res) => {
 			const result = await addClassesCollection.find().toArray();
