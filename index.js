@@ -187,6 +187,13 @@ async function run() {
 			res.send(result);
 		});
 
+		// all instructors api
+		app.get('/users/instructors', async (req, res) => {
+			const query = { role: 'instructor' };
+			const result = await userCollection.find(query).toArray();
+			res.send(result);
+		});
+
 		// Payment method api
 		app.post('/payment-intent-method', async (req, res) => {
 			const { price } = req.body;
@@ -209,10 +216,10 @@ async function run() {
 			res.send(result);
 		});
 
-		app.get('/payments', async (req, res) => {
+		app.get('/payments/:email', async (req, res) => {
 			const email = req.params.email;
 			const query = { email: email };
-			const result = paymentCollection.findOne(query).toArray();
+			const result = await paymentCollection.findOne(query);
 			res.send(result);
 		});
 
