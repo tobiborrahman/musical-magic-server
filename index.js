@@ -194,8 +194,15 @@ async function run() {
 		});
 
 		// Added class api by Instructor
+
 		app.get('/addedClasses', async (req, res) => {
 			const result = await addClassesCollection.find().toArray();
+			res.send(result);
+		});
+		app.get('/addedClasses/:email', async (req, res) => {
+			const email = req.params.email;
+			const query = { email: email };
+			const result = await addClassesCollection.find(query).toArray();
 			res.send(result);
 		});
 
