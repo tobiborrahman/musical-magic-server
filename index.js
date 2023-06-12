@@ -206,6 +206,35 @@ async function run() {
 			res.send(result);
 		});
 
+		app.patch('/addedClasses/approved/:id', async (req, res) => {
+			const id = req.params.id;
+			const filter = { _id: new ObjectId(id) };
+			const updateDoc = {
+				$set: {
+					status: 'approved',
+				},
+			};
+			const result = await addClassesCollection.updateOne(
+				filter,
+				updateDoc
+			);
+			res.send(result);
+		});
+		app.patch('/addedClasses/denied/:id', async (req, res) => {
+			const id = req.params.id;
+			const filter = { _id: new ObjectId(id) };
+			const updateDoc = {
+				$set: {
+					status: 'denied',
+				},
+			};
+			const result = await addClassesCollection.updateOne(
+				filter,
+				updateDoc
+			);
+			res.send(result);
+		});
+
 		app.post('/addedClasses', async (req, res) => {
 			const query = req.body;
 			const result = await addClassesCollection.insertOne(query);
